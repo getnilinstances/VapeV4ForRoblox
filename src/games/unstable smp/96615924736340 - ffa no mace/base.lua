@@ -80,55 +80,83 @@ local function requireModule(folder, name)
 	return success and returned or nil
 end
 
-run(function()
-	local sharedFolder = getShared()
-	local clientFolder = getClient()
-	if not sharedFolder or not clientFolder then return end
+local requiredEngine = {'Config', 'Items', 'Net', 'Controller', 'World', 'Hands', 'Input'}
 
-	mc.Config = requireModule(sharedFolder, 'Config')
-	mc.Physics = requireModule(sharedFolder, 'Physics')
-	mc.Items = requireModule(sharedFolder, 'Items')
-	mc.Effects = requireModule(sharedFolder, 'Effects')
-	mc.Skins = requireModule(sharedFolder, 'Skins')
-	mc.WeaponSkins = requireModule(sharedFolder, 'WeaponSkins')
-	mc.Assets = sharedFolder:FindFirstChild('Assets')
-	mc.Net = requireModule(clientFolder, 'Net')
-	mc.Controller = requireModule(clientFolder, 'Controller')
-	mc.World = requireModule(clientFolder, 'World')
-	mc.Hands = requireModule(clientFolder, 'Hands')
-	mc.Input = requireModule(clientFolder, 'Input')
-	mc.UIKit = requireModule(clientFolder, 'UIKit')
-	mc.FX = requireModule(clientFolder, 'FX')
-	mc.Visuals = requireModule(clientFolder, 'Visuals')
-	mc.WeaponSkinFX = requireModule(clientFolder, 'WeaponSkinFX')
-
-	local remotes = sharedFolder:FindFirstChild('Remotes')
-	if remotes then
-		mc.Action = remotes:FindFirstChild('Action')
-		mc.State = remotes:FindFirstChild('State')
-	end
-
-	if mc.Config and mc.Config.BLOCK then
-		BLOCK = mc.Config.BLOCK
-	end
-end)
-
--- If the engine never handed over a module, every feature that depends on it
--- would quietly do nothing. Say so on load instead of failing silently.
-run(function()
-	local required = {'Config', 'Items', 'Net', 'Controller', 'World', 'Hands', 'Input', 'Visuals'}
+local function missingEngine()
 	local missing = {}
 
-	for _, name in required do
+	for _, name in requiredEngine do
 		if not mc[name] then
 			table.insert(missing, name)
 		end
 	end
 
-	store.missingEngine = missing
-	if #missing > 0 then
-		pcall(vape.CreateNotification, vape, 'unstable smp', 'Engine modules missing: ' .. table.concat(missing, ', '), 20, 'alert')
+	return missing
+end
+
+local function fillEngine()
+	local sharedFolder = getShared()
+	local clientFolder = getClient()
+
+	if sharedFolder then
+		mc.Config = mc.Config or requireModule(sharedFolder, 'Config')
+		mc.Physics = mc.Physics or requireModule(sharedFolder, 'Physics')
+		mc.Items = mc.Items or requireModule(sharedFolder, 'Items')
+		mc.Effects = mc.Effects or requireModule(sharedFolder, 'Effects')
+		mc.Skins = mc.Skins or requireModule(sharedFolder, 'Skins')
+		mc.WeaponSkins = mc.WeaponSkins or requireModule(sharedFolder, 'WeaponSkins')
+		mc.Assets = mc.Assets or sharedFolder:FindFirstChild('Assets')
+
+		local remotes = sharedFolder:FindFirstChild('Remotes')
+		if remotes then
+			mc.Action = mc.Action or remotes:FindFirstChild('Action')
+			mc.State = mc.State or remotes:FindFirstChild('State')
+		end
 	end
+
+	if clientFolder then
+		mc.Net = mc.Net or requireModule(clientFolder, 'Net')
+		mc.Controller = mc.Controller or requireModule(clientFolder, 'Controller')
+		mc.World = mc.World or requireModule(clientFolder, 'World')
+		mc.Hands = mc.Hands or requireModule(clientFolder, 'Hands')
+		mc.Input = mc.Input or requireModule(clientFolder, 'Input')
+		mc.UIKit = mc.UIKit or requireModule(clientFolder, 'UIKit')
+		mc.FX = mc.FX or requireModule(clientFolder, 'FX')
+		mc.Visuals = mc.Visuals or requireModule(clientFolder, 'Visuals')
+		mc.WeaponSkinFX = mc.WeaponSkinFX or requireModule(clientFolder, 'WeaponSkinFX')
+	end
+
+	if mc.Config and mc.Config.BLOCK then
+		BLOCK = mc.Config.BLOCK
+	end
+end
+
+run(function()
+	fillEngine()
+
+	-- The engine's MC folder is not always there the instant we inject. Every
+	-- feature reads mc.* at call time, so keep trying instead of leaving them
+	-- bound to nil modules and silently doing nothing.
+	if #missingEngine() == 0 then return end
+
+	task.spawn(function()
+		local deadline = os.clock() + 120
+
+		while os.clock() < deadline do
+			task.wait(1)
+			fillEngine()
+
+			if #missingEngine() == 0 then
+				if store.installAttackHook then store.installAttackHook() end
+				if store.installNetHook then store.installNetHook() end
+				pcall(vape.CreateNotification, vape, 'unstable smp', 'Engine connected, features are live', 4)
+				return
+			end
+		end
+
+		store.missingEngine = missingEngine()
+		pcall(vape.CreateNotification, vape, 'unstable smp', 'Engine modules missing: ' .. table.concat(store.missingEngine, ', '), 30, 'alert')
+	end)
 end)
 
 local function readItem(raw)
