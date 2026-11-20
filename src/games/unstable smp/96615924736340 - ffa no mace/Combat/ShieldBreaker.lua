@@ -7,8 +7,8 @@ run(function()
 			if not callback then return end
 
 			local hook = function(payload)
-				-- The server drops the shield check when an attack is flagged as a
-				-- swap, which is what an axe hit looks like from its side.
+				
+				
 				if payload.a == 'attack' then
 					if type(payload.st) == 'table' then
 						payload.st.swap = true

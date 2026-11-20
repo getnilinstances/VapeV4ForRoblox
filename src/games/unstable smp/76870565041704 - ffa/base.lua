@@ -54,8 +54,8 @@ local NoSlowdown = {}
 local Killaura = {}
 local BLOCK = 16
 
--- Attack dispatch shared by the modules: features such as hit select, hit swap
--- and wtap have to see every attack, whether it came from aura, triggerbot or a click.
+
+
 store.attackHooks = {}
 store.attackPostHooks = {}
 store.netHooks = {}
@@ -71,8 +71,8 @@ local function getClient()
 	return scripts and scripts:FindFirstChild('MC')
 end
 
--- The MC engine lives under ReplicatedStorage.MC (shared) and PlayerScripts.MC (client).
--- Both are required before any module touches engine state, so everything waits on this.
+
+
 local function requireModule(folder, name)
 	local module = folder and folder:WaitForChild(name, 30)
 	if not module then return nil end
@@ -134,9 +134,9 @@ end
 run(function()
 	fillEngine()
 
-	-- The engine's MC folder is not always there the instant we inject. Every
-	-- feature reads mc.* at call time, so keep trying instead of leaving them
-	-- bound to nil modules and silently doing nothing.
+	
+	
+	
 	if #missingEngine() == 0 then return end
 
 	task.spawn(function()
@@ -296,8 +296,8 @@ local function installAttackHook()
 	end
 end
 
--- Outgoing payloads go through one wrapper as well, so several modules can
--- rewrite the same packet without fighting over the Net.send reference.
+
+
 local function installNetHook()
 	local net = mc.Net
 	if netHookInstalled or not net or type(net.send) ~= 'function' then return end

@@ -20,8 +20,8 @@ run(function()
 				if not using or type(using.start) ~= 'number' then return end
 				if using.kind ~= 'eat' and using.kind ~= 'drink' then return end
 
-				-- using.start counts engine ticks, so pulling it back by the frame
-				-- delta advances the consume timer at the chosen rate.
+				
+				
 				using.start = using.start - (Speed.Value - 1) * delta * 20
 			end))
 		end,

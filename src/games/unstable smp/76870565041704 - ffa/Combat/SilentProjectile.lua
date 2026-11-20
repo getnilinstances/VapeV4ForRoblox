@@ -40,7 +40,7 @@ run(function()
 		local eye = getEye()
 		if not camera or not eye or not entitylib.isAlive then return end
 
-		-- The angle slider is the half angle of the cone we are willing to fire into.
+		
 		local look = camera.CFrame.LookVector
 		local limit = math.cos(math.rad(Angle.Value))
 		local best, bestScore
@@ -82,7 +82,7 @@ run(function()
 		local tick = config and config.TICK
 		local gravity = config and config.GRAVITY
 
-		-- Compensate the arc the projectile falls through over its flight time.
+		
 		if tick and gravity and tick > 0 then
 			local ticks = ((position - eye).Magnitude / speed) / tick
 			position = position + Vector3.new(0, 0.5 * gravity * ticks * ticks, 0)

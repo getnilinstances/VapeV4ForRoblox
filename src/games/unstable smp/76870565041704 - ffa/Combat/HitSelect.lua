@@ -16,8 +16,8 @@ run(function()
 				local part = target.RootPart
 				if not root or not part then return end
 
-				-- Hold the swing back while the target is still outside the reach
-				-- envelope we would actually connect at.
+				
+				
 				local reach = (mc.Controller and mc.Controller.reach) or 3
 				if (part.Position - root.Position).Magnitude > reach * Ratio.Value then
 					return false
