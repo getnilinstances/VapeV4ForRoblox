@@ -13,7 +13,7 @@ local function build()
 	Player.Parent = vape.holder
 end
 
-HitSound = vape.Categories.Legit:CreateModule({
+HitSound = vape.Categories.Utility:CreateModule({
 	Name = 'HitSound',
 	Function = function(callback)
 		if callback then

@@ -100,7 +100,7 @@ local function apply(skinName)
 	end
 end
 
-SkinChanger = vape.Categories.Legit:CreateModule({
+SkinChanger = vape.Categories.Utility:CreateModule({
 	Name = 'SkinChanger',
 	Function = function(callback)
 		if not callback then
