@@ -113,6 +113,24 @@ run(function()
 	end
 end)
 
+-- If the engine never handed over a module, every feature that depends on it
+-- would quietly do nothing. Say so on load instead of failing silently.
+run(function()
+	local required = {'Config', 'Items', 'Net', 'Controller', 'World', 'Hands', 'Input', 'Visuals'}
+	local missing = {}
+
+	for _, name in required do
+		if not mc[name] then
+			table.insert(missing, name)
+		end
+	end
+
+	store.missingEngine = missing
+	if #missing > 0 then
+		pcall(vape.CreateNotification, vape, 'unstable smp', 'Engine modules missing: ' .. table.concat(missing, ', '), 20, 'alert')
+	end
+end)
+
 local function readItem(raw)
 	if type(raw) ~= 'string' or raw == '' then return nil end
 	local success, decoded = pcall(function()
